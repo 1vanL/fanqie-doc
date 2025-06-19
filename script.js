@@ -29,64 +29,45 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('🎬 Loading动画结束，网站内容显示');
     }, 6000);
 
-    // Spline加载状态检测（用于性能监控）
-    let splineLoaded = false;
-    let splineLoadStartTime = performance.now();
-    
-    // 检测Spline加载完成
+    // Spline加载状态检测
     if (splineViewer) {
-        // 监听Spline的load事件
+        console.log('🔄 正在加载 Spline 场景...');
+        
+        // 监听加载完成事件
         splineViewer.addEventListener('load', () => {
-            const loadTime = performance.now() - splineLoadStartTime;
-            splineLoaded = true;
-            console.log(`🎉 Spline内容加载完成！耗时: ${Math.round(loadTime)}ms`);
+            console.log('✅ Spline 场景加载成功！');
+            document.body.classList.add('spline-loaded');
         });
-        
-        // 监听Spline的error事件
-        splineViewer.addEventListener('error', (event) => {
-            console.error('❌ Spline加载失败:', event);
+
+        // 监听加载错误事件
+        splineViewer.addEventListener('error', (error) => {
+            console.error('❌ Spline 场景加载失败:', error);
             document.body.classList.add('spline-error');
+            // 显示备用背景
+            document.querySelector('.homepage-background').classList.add('fallback');
         });
-        
-        // 备用检测方法：定期检查Spline是否已渲染
-        const checkSplineLoaded = () => {
-            if (!splineLoaded && splineViewer.shadowRoot) {
-                const canvas = splineViewer.shadowRoot.querySelector('canvas');
-                if (canvas && canvas.width > 0 && canvas.height > 0) {
-                    const loadTime = performance.now() - splineLoadStartTime;
-                    splineLoaded = true;
-                    console.log(`🎨 Spline渲染完成！耗时: ${Math.round(loadTime)}ms`);
-                    setTimeout(() => {
-                        document.body.classList.add('spline-loaded');
-                        console.log('🎬 Loading动画结束，网站内容显示');
-                    }, 5000); // 临时延长到5秒，用于测试loading动画
-                    return;
-                }
-            }
-            
-            // 如果还没加载完成且未超时，继续检查
-            if (!splineLoaded && performance.now() - splineLoadStartTime < 10000) {
-                requestAnimationFrame(checkSplineLoaded);
-            } else if (!splineLoaded) {
-                console.warn('⚠️ Spline加载超时（10秒）');
+
+        // 设置加载超时
+        setTimeout(() => {
+            if (!document.body.classList.contains('spline-loaded')) {
+                console.warn('⚠️ Spline 场景加载超时');
                 document.body.classList.add('spline-timeout');
+                // 显示备用背景
+                document.querySelector('.homepage-background').classList.add('fallback');
             }
-        };
-        
-        // 开始检查
-        requestAnimationFrame(checkSplineLoaded);
+        }, 10000); // 10秒超时
     }
     
     // 提供全局函数来检查Spline加载状态
-    window.isSplineLoaded = () => splineLoaded;
-    window.getSplineLoadTime = () => performance.now() - splineLoadStartTime;
+    window.isSplineLoaded = () => splineViewer ? document.body.classList.contains('spline-loaded') : false;
+    window.getSplineLoadTime = () => splineViewer ? performance.now() - splineLoadStartTime : null;
     
     // 加载状态监控函数
     window.getSplineLoadStatus = () => {
         const currentTime = performance.now();
         const loadTime = currentTime - splineLoadStartTime;
         
-        if (splineLoaded) {
+        if (splineViewer && document.body.classList.contains('spline-loaded')) {
             return {
                 status: 'loaded',
                 loadTime: Math.round(loadTime),
@@ -110,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 在控制台定期输出加载状态（仅在开发模式下）
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         const logInterval = setInterval(() => {
-            if (splineLoaded) {
+            if (splineViewer && document.body.classList.contains('spline-loaded')) {
                 clearInterval(logInterval);
                 return;
             }

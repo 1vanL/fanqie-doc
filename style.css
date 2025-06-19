@@ -77,7 +77,25 @@ body.spline-timeout .homepage-background::before {
     z-index: 0;
 }
 
+/* Spline加载失败时的备用背景 */
+.homepage-background.fallback {
+    background: linear-gradient(135deg, #ff6f1a 0%, #ff450f 100%);
+    border-radius: 24px;
+    animation: gradientAnimation 10s ease infinite;
+    background-size: 200% 200%;
+}
 
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
 
 /* 导航栏 */
 .navigation {
